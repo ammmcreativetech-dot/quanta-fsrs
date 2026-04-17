@@ -1,0 +1,51 @@
+{
+  "name": "quanta-fsrs",
+  "version": "1.0.0",
+  "description": "FSRS v4.5/5 spaced repetition scheduler for TypeScript/JavaScript — MINT-optimized, zero dependencies, edge-ready. Used in production at quanta-study.de.",
+  "keywords": [
+    "fsrs", "spaced-repetition", "flashcards", "anki", "learning", "memory",
+    "forgetting-curve", "ebbinghaus", "sm2", "study", "education", "MINT", "STEM",
+    "typescript", "scheduler", "retention", "retrieval-practice"
+  ],
+  "homepage": "https://quanta-study.de",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ammmcreativetech-dot/quanta-fsrs"
+  },
+  "bugs": {
+    "url": "https://github.com/ammmcreativetech-dot/quanta-fsrs/issues"
+  },
+  "author": "Quanta Team <ammm.creativetech@gmail.com> (https://quanta-study.de)",
+  "license": "SEE LICENSE IN LICENSE",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  }
+}
