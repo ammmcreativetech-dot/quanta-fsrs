@@ -1,11 +1,25 @@
 {
   "name": "quanta-fsrs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "FSRS v4.5/5 spaced repetition scheduler for TypeScript/JavaScript — MINT-optimized, zero dependencies, edge-ready. Used in production at quanta-study.de.",
   "keywords": [
-    "fsrs", "spaced-repetition", "flashcards", "anki", "learning", "memory",
-    "forgetting-curve", "ebbinghaus", "sm2", "study", "education", "MINT", "STEM",
-    "typescript", "scheduler", "retention", "retrieval-practice"
+    "fsrs",
+    "spaced-repetition",
+    "flashcards",
+    "anki",
+    "learning",
+    "memory",
+    "forgetting-curve",
+    "ebbinghaus",
+    "sm2",
+    "study",
+    "education",
+    "MINT",
+    "STEM",
+    "typescript",
+    "scheduler",
+    "retention",
+    "retrieval-practice"
   ],
   "homepage": "https://quanta-study.de",
   "repository": {
@@ -27,7 +41,11 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
