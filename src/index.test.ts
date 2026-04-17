@@ -60,17 +60,21 @@ describe('FSRS — Core', () => {
 });
 
 describe('FSRS — Multi-session progression', () => {
-  it('increases stability over successive Good reviews', () => {
+  it('increases stability over successive Good reviews (with time gaps)', () => {
     let card = createNewCard('progression');
     const stabilities: number[] = [];
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    let now = new Date('2024-01-01T00:00:00Z');
+
     for (let i = 0; i < 4; i++) {
-      const res = scheduleFSRS(card, Rating.Good);
+      // Simulate 7 days passing between each review
+      now = new Date(now.getTime() + 7 * DAY_MS);
+      const res = scheduleFSRS(card, Rating.Good, now);
       card = res.card;
       stabilities.push(card.stability);
     }
-    // Net stability after 4 reviews must be higher than after first review
+    // After 4 reviews with real time gaps, stability must grow substantially
     expect(stabilities[stabilities.length - 1]).toBeGreaterThan(stabilities[0]);
-    // And all stabilties must be positive
     stabilities.forEach(s => expect(s).toBeGreaterThan(0));
   });
 
