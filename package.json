@@ -1,6 +1,6 @@
 {
   "name": "quanta-fsrs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "FSRS v4.5/5 spaced repetition scheduler for TypeScript/JavaScript — MINT-optimized, zero dependencies, edge-ready. Used in production at quanta-study.de.",
   "keywords": [
     "fsrs",
