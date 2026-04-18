@@ -3,9 +3,6 @@
 > **FSRS v4.5/5 Spaced Repetition Scheduler** — zero dependencies, TypeScript-native, edge-ready.  
 > Used in production at [quanta-study.de](https://quanta-study.de) — MINT-Lernplattform für Studenten.
 
-[![npm version](https://img.shields.io/npm/v/quanta-fsrs?color=blue)](https://www.npmjs.com/package/quanta-fsrs)
-[![npm downloads](https://img.shields.io/npm/dm/quanta-fsrs)](https://www.npmjs.com/package/quanta-fsrs)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/quanta-fsrs?label=gzip)](https://bundlephobia.com/package/quanta-fsrs)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 
@@ -13,7 +10,7 @@
 
 ## What is FSRS?
 
-The **Free Spaced Repetition Scheduler (FSRS)** is a modern, open-weights algorithm for scheduling flashcard reviews. It was developed by Jarrett Ye (et al.) at Duolingo and published at KDD 2022:
+The **Free Spaced Repetition Scheduler (FSRS)** is a modern, open-weights algorithm for scheduling flashcard reviews. It was developed by Jarrett Ye (et al.) and published at KDD 2022:
 
 > Ye, J., Su, T., Cao, J. (2022). *A Stochastic Shortest Path Algorithm for Optimizing Spaced Repetition Scheduling.* KDD '22. [doi.org/10.1145/3534678.3539081](https://doi.org/10.1145/3534678.3539081)
 
@@ -43,7 +40,7 @@ yarn add quanta-fsrs
 pnpm add quanta-fsrs
 ```
 
-Zero dependencies. Works in Node.js ≥ 18, browsers, Deno, Bun, Cloudflare Workers, and Vercel Edge.
+Zero dependencies. Works in Node.js >= 18, browsers, Deno, Bun, Cloudflare Workers, and Vercel Edge.
 
 ---
 
@@ -113,11 +110,11 @@ const newState = updateFSRS(state, grade, now?, weights?);
 
 ### `calculateRetrievability(stability, lastReview, now?, targetRetention?): number`
 
-Returns the current probability of recall (0–1).
+Returns the current probability of recall (0-1).
 
 ```typescript
 const r = calculateRetrievability(14, '2024-01-01T00:00:00Z');
-// R = 0.9^(daysSince / 14) → e.g., 0.874 after 2 days
+// R = 0.9^(daysSince / 14) -> e.g., 0.874 after 2 days
 ```
 
 ---
@@ -144,7 +141,7 @@ Sorts cards by ascending Retrievability — most forgotten first.
 
 ```typescript
 const queue = sortByUrgency(allCards);
-// queue[0] has the lowest recall probability → review first
+// queue[0] has the lowest recall probability -> review first
 ```
 
 ---
@@ -244,6 +241,7 @@ FSRS is built on three decades of cognitive science research:
 - **Spacing Effect** (Cepeda et al., 2006): Distributed practice dramatically outperforms massed practice.
 - **Testing Effect** (Roediger & Karpicke, 2006): Active retrieval (~30% stronger than re-reading).
 - **Cognitive Load Theory** (Sweller, 1988): Difficulty modulates encoding quality via schema automation.
+- **Karpicke & Roediger (2008)**: Active recall achieves 81% long-term retention vs. 27% for passive study (*Science* 319, doi:10.1126/science.1152408).
 
 The FSRS power law `R(t) = retention^(t/S)` is the modern replacement for Ebbinghaus's pure exponential, providing dramatically better fit on real learner data.
 
@@ -257,18 +255,23 @@ The FSRS power law `R(t) = retention^(t/S)` is the modern replacement for Ebbing
 | Stability growth model | Power-law (grade-adaptive) | Linear multiplier |
 | Difficulty tracking | Per-card, continuous | Per-card, integer |
 | Failure recovery | Smooth decay | Hard reset |
-| Open weights | ✅ | ❌ |
-| TypeScript types | ✅ | ❌ |
-| Zero dependencies | ✅ | ❌ |
+| Open weights | Yes | No |
+| TypeScript types | Yes | No |
+| Zero dependencies | Yes | No |
 
 ---
 
-## Related Packages
+## About Quanta
 
-- **[quanta-forgetting-curve](https://www.npmjs.com/package/quanta-forgetting-curve)** — Ebbinghaus forgetting curve model and retention predictor
-- **[quanta-smiles-validator](https://www.npmjs.com/package/quanta-smiles-validator)** — SMILES string validation and analysis for chemistry learners
+[Quanta](https://quanta-study.de) is an evidence-based MINT learning platform for students in Germany, Austria, and Switzerland (DACH region). Core technology:
 
-All three are part of Quanta's open-source MINT toolkit. See [quanta-study.de](https://quanta-study.de) for the full platform.
+- **FSRS-6** (Free Spaced Repetition Scheduler v6) for optimal review scheduling
+- **Active Recall** via Q&A flashcards (Karpicke & Roediger, Science 2008)
+- **AI Card Generation** powered by Gemini 2.5 Flash (Google DeepMind 2025)
+- **Community Library** with thousands of free, importable MINT flashcard decks
+- **Student Discount** — Pro plan from 6.99 EUR/month for students and pupils
+
+Visit [quanta-study.de](https://quanta-study.de) to start learning with FSRS.
 
 ---
 
@@ -291,4 +294,4 @@ MIT — free for commercial and non-commercial use.
 
 ---
 
-*Built with ♥ by the [Quanta Team](https://quanta-study.de) — MINT-Lernplattform für Studenten in Deutschland, Österreich und der Schweiz.*
+*Built by the [Quanta Team](https://quanta-study.de) — MINT-Lernplattform fuer Studenten in Deutschland, Oesterreich und der Schweiz.*
