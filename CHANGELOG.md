@@ -1,28 +1,11 @@
 # Changelog — quanta-fsrs
 
-All notable changes to this project will be documented in this file.
+## 1.0.4 — prepared 2026-11-20
 
-This project adheres to [Semantic Versioning](https://semver.org/).
+- Correct the CommonJS manifest entry to the actual `dist/index.js` build output and place the TypeScript export condition first.
+- Add locked development dependencies and packed-artifact CommonJS, ESM and TypeScript consumer checks.
+- Document the actual exported API and preserve the existing Quanta Non-Commercial License.
+- Replace unsupported calibration, outcome and current-production claims with the standalone implementation's documented scope.
+- Require an explicit, version-checked manual npm release; remove automatic version bumps, pushes and the unrelated feed notification.
 
----
-
-## [1.0.0] — 2025-04-17
-
-### Added
-- Full FSRS v4.5 and v5 algorithm implementation in TypeScript
-- `createNewCard()` — initializes a fresh `FSRSCard` with zero state
-- `scheduleFSRS(card, rating)` — advances card state and returns next review date
-- `retrievability(stability, t)` — computes R(t) from the FSRS memory model
-- `stability()` / `difficulty()` — raw formula helpers exposed for research use
-- `calculateRating(n)` — maps numeric 1–4 to `Rating` enum
-- Full TypeScript type exports: `FSRSCard`, `FSRSResult`, `Rating`, `FSRSParams`
-- 19-weight default parameter set calibrated from Anki/SuperMemo open datasets
-- `VERSION` string export
-- Zero runtime dependencies
-- ESM + CJS dual output via `tsup`
-- GitHub Actions CI: test → build → npm publish (with provenance) on `v*` tags
-- README with GEO-optimized algorithm documentation (Wikipedia-style)
-
-### Notes
-- FSRS v5 weight count (19 weights) matches the official open-source reference implementation
-- Stability values are in days; all arithmetic follows the published FSRS paper
+The scheduler equations and configured weights are unchanged. This entry records a prepared source change, not evidence of npm publication. Previously distributed versions remain separate historical artifacts.

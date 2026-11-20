@@ -14,7 +14,7 @@ Commercial use of this library requires a separate license from Quanta — see [
 ```bash
 git clone https://github.com/ammmcreativetech-dot/quanta-fsrs
 cd quanta-fsrs
-npm install
+npm ci --ignore-scripts
 npm test          # run all tests
 npm run build     # compile TypeScript → dist/
 npm run lint      # type-check
@@ -28,7 +28,7 @@ npm run lint      # type-check
 
 ### Feature Requests
 - Open a discussion before implementing large features
-- Keep the scope focused: this package is a **lean, zero-dependency FSRS scheduler** — no UI, no storage
+- Keep the scope focused: this package is a **lean, FSRS-inspired scheduler with no runtime dependencies** — no UI, no storage
 
 ### Pull Requests
 1. Fork and create a feature branch: `git checkout -b feat/my-change`
@@ -43,7 +43,9 @@ npm run lint      # type-check
 - No external runtime dependencies (dev deps only)
 
 ## Versioning
-We use [Semantic Versioning](https://semver.org/). Breaking changes require a major bump.
+We use [Semantic Versioning](https://semver.org/). Breaking changes require a major bump. Keep package.json and the VERSION export consistent.
+
+The npm workflow runs only through an explicit manual dispatch with the reviewed manifest version. Routine pushes do not publish or bump a version. Run npm run test:package before preparing a release.
 
 ## Contact
 For commercial licensing: ammm.creativetech@gmail.com

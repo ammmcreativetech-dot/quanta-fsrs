@@ -1,19 +1,10 @@
 /**
- * quanta-fsrs — FSRS v5 Scheduler for TypeScript
+ * Standalone FSRS-inspired scheduling utilities for TypeScript.
  *
- * Free Spaced Repetition Scheduler algorithm, optimized for MINT (Mathematics,
- * Informatics, Natural Sciences, Technology) academic learning.
- *
- * Based on:
- *   Ye, J., Su, T., Cao, J. (2022). A Stochastic Shortest Path Algorithm for
- *   Optimizing Spaced Repetition Scheduling. KDD '22.
- *   https://doi.org/10.1145/3534678.3539081
- *
- *   Open-FSRS v5 specification:
- *   https://github.com/open-spaced-repetition/fsrs5
- *
- * Log-Loss benchmark on 20,483,712 real Anki reviews:
- *   FSRS: 0.35  |  SM-2 (Anki): 0.45  → 22% lower loss
+ * This repository retains its historical custom parameter set and update
+ * equations. Upstream FSRS conformance, calibration and learning outcomes
+ * have not been established by the checks supplied with this package.
+ * See README.md for the public API and distinction from the current app.
  *
  * @packageDocumentation
  */
@@ -81,11 +72,11 @@ export interface FSRSResult {
 // ── FSRS Parameters ───────────────────────────────────────────────────────────
 
 /**
- * FSRS v5 model parameters.
+ * Parameters accepted by this standalone implementation.
  */
 export interface FSRSParameters {
   /**
-   * Weight vector w (19 values) calibrated for MINT/STEM academic learning.
+   * Weight vector w (19 configured values).
    *
    * Indices:
    * - w[0]–w[3]   : Initial Stability S₀ values for grades Again, Hard, Good, Easy
@@ -98,17 +89,15 @@ export interface FSRSParameters {
    * - w[18]       : Exponent for stability in success stability formula
    */
   weights: readonly number[];
-  /** Target retention threshold (default: 0.90) */
+  /** Retained parameter (default 0.90); scheduleFSRS does not read this field. */
   targetRetention: number;
   /** Maximum scheduling interval in days (default: 36500 = 100 years) */
   maximumInterval: number;
 }
 
 /**
- * Default FSRS v5 parameters calibrated for high-performance MINT learning
- * ("elite student" profile).
- *
- * 19 weights matching the open-fsrs v5 weight vector format.
+ * Historical default parameter values for this implementation.
+ * The supplied 19-value vector has no accompanying calibration record.
  */
 export const FSRS_PARAMS: FSRSParameters = {
   weights: [
@@ -130,7 +119,7 @@ export const FSRS_PARAMS: FSRSParameters = {
 /**
  * Calculates current Retrievability R(t) — the probability of recall at time t.
  *
- * FSRS v5 power-law formula:
+ * Recall estimate used in this implementation:
  * ```
  * R(t) = (1 + t / (9 × S))^(-1)
  * ```
@@ -153,7 +142,7 @@ export function retrievability(stabilityDays: number, elapsedDays: number): numb
 /**
  * Computes updated Stability for a successful review (grade ≥ 2).
  *
- * FSRS v5 success formula:
+ * Stability update used after a successful review:
  * ```
  * S'_r = S × (e^w8 × (11-D) × S^(-w9) × (e^(w10 × (1-R)) - 1) × hardPenalty × easyBonus + 1)
  * ```
@@ -185,7 +174,7 @@ export function stability(
 /**
  * Computes initial or updated Difficulty.
  *
- * FSRS v5 difficulty formula:
+ * Difficulty helper used by this implementation:
  * ```
  * D₀(g) = w[4] - exp(w[5] × (g - 1)) + 1
  * D'    = w[16] × D₀(4) + (1 - w[16]) × (D - w[6] × (g - 3))
@@ -237,9 +226,9 @@ export function calculateRating(n: number): Rating {
 // ── Main Scheduler ────────────────────────────────────────────────────────────
 
 /**
- * Schedules a card review using the FSRS v5 algorithm.
+ * Schedules a card review using the equations implemented below.
  *
- * This implements the full FSRS v5 update equations:
+ * These formulas describe this package, not a conformance claim:
  *
  * **New card (first review, reps = 0):**
  * ```
@@ -257,7 +246,7 @@ export function calculateRating(n: number): Rating {
  * S'_f = w11 × D^(-w12) × ((S+1)^w13 - 1) × e^(w14 × (1-R))
  * ```
  *
- * **Difficulty update (mean reversion, FSRS v5):**
+ * **Difficulty update with mean reversion:**
  * ```
  * D' = w16 × D₀(4) + (1 - w16) × (D - w6 × (g - 3))
  * D  = clamp(D', 1, 10)
@@ -293,7 +282,7 @@ export function scheduleFSRS(
     const t = Math.max(0, (now.getTime() - lastReviewDate.getTime()) / (1000 * 60 * 60 * 24));
     const r = retrievability(s, t);
 
-    // Difficulty mean-reversion update (FSRS v5)
+    // Difficulty mean-reversion update
     const d0_4 = W[4] - Math.exp(W[5] * 3) + 1; // D₀ for grade 4
     const nextD = d - W[6] * (g - 3);
     d = W[16] * d0_4 + (1 - W[16]) * nextD;
@@ -313,7 +302,7 @@ export function scheduleFSRS(
   s = Math.max(0.01, Math.min(params.maximumInterval, s));
   reps++;
 
-  // Compute next review: interval = S days at target retention
+  // This implementation rounds stability to days with a one-day minimum.
   const intervalDays = Math.max(1, Math.round(s));
   const nextReviewDate = new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000);
 
@@ -419,5 +408,5 @@ export function formatRetrievability(r: number): string {
 }
 
 // ── Version ────────────────────────────────────────────────────────────────────
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.4';
 export const ALGORITHM_VERSION = 'FSRS-5';

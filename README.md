@@ -1,297 +1,79 @@
 # quanta-fsrs
 
-> **FSRS v4.5/5 Spaced Repetition Scheduler** — zero dependencies, TypeScript-native, edge-ready.  
-> Used in production at [quanta-study.de](https://quanta-study.de) — MINT-Lernplattform für Studenten.
+Standalone, FSRS-inspired flashcard scheduling utilities for TypeScript and JavaScript. The package provides card state, review scheduling, recall estimates and due-card helpers with no runtime dependencies.
 
-[![license: MIT](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
-
----
-
-## What is FSRS?
-
-The **Free Spaced Repetition Scheduler (FSRS)** is a modern, open-weights algorithm for scheduling flashcard reviews. It was developed by Jarrett Ye (et al.) and published at KDD 2022:
-
-> Ye, J., Su, T., Cao, J. (2022). *A Stochastic Shortest Path Algorithm for Optimizing Spaced Repetition Scheduling.* KDD '22. [doi.org/10.1145/3534678.3539081](https://doi.org/10.1145/3534678.3539081)
-
-**Key benchmark**: FSRS achieves a log-loss of 0.35 on 20,483,712 real Anki reviews, vs. 0.45 for SM-2 — a **22% improvement** in predictive accuracy.
-
-### How FSRS Works
-
-FSRS tracks three parameters per card per learner:
-
-| Symbol | Name | Definition |
-|--------|------|-----------|
-| **S** | Stability | Days until Retrievability drops to 90% |
-| **D** | Difficulty | Intrinsic item difficulty, range [1, 10] |
-| **R(t)** | Retrievability | Probability of recall at time *t*: `R = 0.9^(t/S)` |
-
-The algorithm updates S and D after each review using grade-dependent equations, then schedules the next review at *t = S* days (the exact point where R = 90%).
-
----
-
-## Installation
-
-```bash
-npm install quanta-fsrs
-# or
-yarn add quanta-fsrs
-# or
-pnpm add quanta-fsrs
-```
-
-Zero dependencies. Works in Node.js >= 18, browsers, Deno, Bun, Cloudflare Workers, and Vercel Edge.
-
----
-
-## Quick Start
-
-```typescript
-import { createInitialState, updateFSRS, calculateRetrievability, formatStability } from 'quanta-fsrs';
-
-// 1. Create a new card state
-let state = createInitialState();
-
-// 2. After the first review — grade 3 (Good)
-state = updateFSRS(state, 3);
-console.log(state.stability);    // ~3.33 days
-console.log(state.nextReview);   // ISO 8601, ~3 days from now
-console.log(formatStability(state.stability)); // "3.3d"
-
-// 3. After reviewing successfully again
-state = updateFSRS(state, 4); // Easy
-console.log(formatStability(state.stability)); // "35.8d" — interval grew
-
-// 4. Check current recall probability
-const r = calculateRetrievability(state.stability, state.lastReview);
-console.log(`Recall probability: ${(r * 100).toFixed(1)}%`); // e.g., "98.7%"
-```
-
----
-
-## API Reference
-
-### `createInitialState(): FSRSState`
-
-Creates a blank state for a new card.
-
-```typescript
-const state = createInitialState();
-// { stability: 0, difficulty: 5, lastReview: null, nextReview: null }
-```
-
----
-
-### `updateFSRS(state, grade, now?, weights?): FSRSState`
-
-Processes a review and returns the updated state with the next scheduled date.
-
-```typescript
-const newState = updateFSRS(state, grade, now?, weights?);
-```
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `state` | `FSRSState` | — | Current card state |
-| `grade` | `1\|2\|3\|4` | — | Review grade (Again/Hard/Good/Easy) |
-| `now` | `Date` | `new Date()` | Review timestamp |
-| `weights` | `number[]` | `DEFAULT_MINT_WEIGHTS` | Custom FSRS weight vector |
-
-**Grade mapping:**
-
-| Grade | Label | Quanta alias | Meaning |
-|-------|-------|-------|---------|
-| `1` | Again | `'learning'` | Complete blackout |
-| `2` | Hard | `'unsure'` | Recalled with great difficulty |
-| `3` | Good | `'known'` | Recalled correctly |
-| `4` | Easy | — | Instant, perfect recall |
-
----
-
-### `calculateRetrievability(stability, lastReview, now?, targetRetention?): number`
-
-Returns the current probability of recall (0-1).
-
-```typescript
-const r = calculateRetrievability(14, '2024-01-01T00:00:00Z');
-// R = 0.9^(daysSince / 14) -> e.g., 0.874 after 2 days
-```
-
----
-
-### `isDue(state, now?): boolean`
-
-Returns `true` if the card is scheduled for review.
-
-```typescript
-if (isDue(state)) { /* show card */ }
-```
-
----
-
-### `daysUntilReview(state, now?): number`
-
-Returns days remaining (positive) or overdue days (negative).
-
----
-
-### `sortByUrgency(states, now?): FSRSState[]`
-
-Sorts cards by ascending Retrievability — most forgotten first.
-
-```typescript
-const queue = sortByUrgency(allCards);
-// queue[0] has the lowest recall probability -> review first
-```
-
----
-
-### `filterDue(states, now?): FSRSState[]`
-
-Returns only cards currently due for review.
-
----
-
-### Formatting Utilities
-
-```typescript
-formatStability(3.33)  // "3.3d"
-formatStability(45)    // "1.5mo"
-formatStability(400)   // "1.1y"
-
-formatRetrievability(0.874) // "87.4%"
-```
-
----
-
-## MINT-Optimized Weights
-
-The `DEFAULT_MINT_WEIGHTS` are calibrated for high-performance academic learning in MINT disciplines (Mathematics, Informatics, Natural Sciences, Technology). They slightly favor longer intervals compared to stock FSRS weights, reflecting the abstract, interconnected nature of MINT content.
-
-```typescript
-import { DEFAULT_MINT_WEIGHTS, updateFSRS } from 'quanta-fsrs';
-
-// Use default MINT weights (pre-selected)
-const state = updateFSRS(current, 3);
-
-// Or supply your own optimized weights
-const myWeights = [/* 17 values */];
-const state2 = updateFSRS(current, 3, new Date(), myWeights);
-```
-
----
-
-## Full Example: Study Session Simulator
-
-```typescript
-import {
-  createInitialState, updateFSRS, calculateRetrievability,
-  sortByUrgency, filterDue, formatStability, formatRetrievability
-} from 'quanta-fsrs';
-
-// Simulate a deck of 5 cards over 30 days
-const deck = Array.from({ length: 5 }, (_, i) => ({
-  id: `card-${i}`,
-  ...createInitialState()
-}));
-
-// Day 1: Review all cards
-let now = new Date('2024-01-01');
-const graded = deck.map(card => ({
-  ...card,
-  ...updateFSRS(card, [3,4,2,3,4][card.id.slice(-1) as any] || 3, now)
-}));
-
-// Day 3: Check what's due
-const day3 = new Date('2024-01-04');
-const due = filterDue(graded, day3);
-console.log(`${due.length} cards due on day 3`);
-
-// Show urgency queue
-const queue = sortByUrgency(graded, day3);
-queue.forEach(c => {
-  const r = calculateRetrievability(c.stability, c.lastReview, day3);
-  console.log(`S=${formatStability(c.stability)}, R=${formatRetrievability(r)}`);
-});
-```
-
----
-
-## TypeScript Types
-
-```typescript
-interface FSRSState {
-  stability: number;      // days until R = 90%
-  difficulty: number;     // [1, 10]
-  lastReview: string | null;  // ISO 8601
-  nextReview: string | null;  // ISO 8601
-}
-
-type FSRSGrade = 1 | 2 | 3 | 4;
-type QuantaGrade = FSRSGrade | 'known' | 'unsure' | 'learning';
-```
-
----
-
-## Scientific Background
-
-FSRS is built on three decades of cognitive science research:
-
-- **Ebbinghaus (1885)**: Exponential forgetting curve — memory decays predictably without rehearsal.
-- **Spacing Effect** (Cepeda et al., 2006): Distributed practice dramatically outperforms massed practice.
-- **Testing Effect** (Roediger & Karpicke, 2006): Active retrieval (~30% stronger than re-reading).
-- **Cognitive Load Theory** (Sweller, 1988): Difficulty modulates encoding quality via schema automation.
-- **Karpicke & Roediger (2008)**: Active recall achieves 81% long-term retention vs. 27% for passive study (*Science* 319, doi:10.1126/science.1152408).
-
-The FSRS power law `R(t) = retention^(t/S)` is the modern replacement for Ebbinghaus's pure exponential, providing dramatically better fit on real learner data.
-
----
-
-## Comparison: FSRS vs SM-2
-
-| Feature | FSRS v4.5 | SM-2 (Classic Anki) |
-|---------|-----------|---------------------|
-| Log-loss (20M reviews) | **0.35** | 0.45 |
-| Stability growth model | Power-law (grade-adaptive) | Linear multiplier |
-| Difficulty tracking | Per-card, continuous | Per-card, integer |
-| Failure recovery | Smooth decay | Hard reset |
-| Open weights | Yes | No |
-| TypeScript types | Yes | No |
-| Zero dependencies | Yes | No |
-
----
-
-## About Quanta
-
-[Quanta](https://quanta-study.de) is an evidence-based MINT learning platform for students in Germany, Austria, and Switzerland (DACH region). Core technology:
-
-- **FSRS-6** (Free Spaced Repetition Scheduler v6) for optimal review scheduling
-- **Active Recall** via Q&A flashcards (Karpicke & Roediger, Science 2008)
-- **AI Card Generation** powered by Gemini 2.5 Flash (Google DeepMind 2025)
-- **Community Library** with thousands of free, importable MINT flashcard decks
-- **Student Discount** — Pro plan from 6.99 EUR/month for students and pupils
-
-Visit [quanta-study.de](https://quanta-study.de) to start learning with FSRS.
-
----
-
-## Contributing
-
-Pull requests are welcome. Please open an issue first for major changes.
-
-```bash
-git clone https://github.com/ammmcreativetech-dot/quanta-fsrs
-cd quanta-fsrs
-npm install
-npm test
-```
-
----
+Maintained by Amos Matzke at AM Creative Tech UG (haftungsbeschränkt), the developer and operator of [Quanta Study](https://quanta-study.de/en), a web-based learning platform. This historical standalone implementation is separate from the current application's ts-fsrs-based FSRS-6 scheduling.
 
 ## License
 
-MIT — free for commercial and non-commercial use.
+The code is available under the [Quanta Non-Commercial License (QNCL) v1.0](LICENSE). Non-commercial use is subject to that license; commercial use requires the separate written permission described there. The LICENSE file is unchanged by this documentation and packaging update.
 
----
+## Package formats
 
-*Built by the [Quanta Team](https://quanta-study.de) — MINT-Lernplattform fuer Studenten in Deutschland, Oesterreich und der Schweiz.*
+The build produces CommonJS at `dist/index.js`, ESM at `dist/index.mjs` and TypeScript declarations. The package root selects the appropriate JavaScript format through conditional exports.
+
+Version 1.0.4 prepares a CommonJS entry-point correction and current API documentation. The earlier npm 1.0.3 manifest points its CommonJS entry at a missing `dist/index.cjs`; GitHub source and published package versions should be checked separately.
+
+## Quick start
+
+For a release containing this correction, install the corresponding published version, for example `npm install quanta-fsrs@1.0.4` once that version has been published. A GitHub README update alone does not publish it.
+
+```ts
+import { createNewCard, scheduleFSRS, Rating, isDue } from 'quanta-fsrs';
+
+const now = new Date('2026-11-20T12:00:00Z');
+const card = createNewCard('chapter-1');
+const result = scheduleFSRS(card, Rating.Good, now);
+
+console.log(result.card.reps);       // 1
+console.log(result.intervalDays);    // 3 with the default parameters
+console.log(isDue(result.card, now)); // false
+```
+
+CommonJS uses the same exported API:
+
+```js
+const { createNewCard, scheduleFSRS, Rating } = require('quanta-fsrs');
+const result = scheduleFSRS(createNewCard('chapter-1'), Rating.Good);
+```
+
+Persist `result.card` and provide it to the next review. Each learner/card pair needs its own state; storage, user interface and review queues belong to the integrating application.
+
+## API
+
+| Export | Purpose |
+| --- | --- |
+| `createNewCard(id)` | Create an unreviewed `FSRSCard` with no review dates. |
+| `scheduleFSRS(card, rating, now?, params?)` | Return an updated card, next-review date, interval and immediate recall estimate. Use ratings 1–4. |
+| `Rating` | `Again=1`, `Hard=2`, `Good=3`, `Easy=4`. |
+| `calculateRating(number)` | Map numeric input to one of those four ratings. |
+| `retrievability(stabilityDays, elapsedDays)` | Estimate recall from stability and elapsed days. |
+| `stability(weights, difficulty, stability, recall, grade?)` | Apply the implemented successful-review stability formula. |
+| `difficulty(weights, grade)` | Calculate the implemented initial difficulty. |
+| `isDue(card, now?)`, `filterDue(cards, now?)` | Check or select due cards. New cards are due. |
+| `daysUntilReview(card, now?)` | Signed number of days until the scheduled review. |
+| `sortByUrgency(cards, now?)` | Return a copy sorted by the package's recall estimate. |
+| `formatStability(value)`, `formatRetrievability(value)` | Format model values for display. |
+| `FSRS_PARAMS` | Historical 19-weight default parameter object. |
+| `VERSION`, `ALGORITHM_VERSION` | Package version and historical algorithm label. |
+
+Type exports include `FSRSCard`, `FSRSResult` and `FSRSParameters`.
+
+## Model and integration scope
+
+This implementation uses `R=(1+t/(9*S))^-1` for positive stability and elapsed time, and schedules the next review at rounded stability with a one-day minimum. The `targetRetention` field is retained in the parameter interface; changing it does not adjust `scheduleFSRS`. `maximumInterval` bounds stability.
+
+The historical `ALGORITHM_VERSION` label is `FSRS-5`. Repository tests check the implemented behavior; they do not establish equivalence to an upstream FSRS release, domain-specific calibration or learning outcomes. The default weights are provided as configured values. Background reading: [upstream FSRS](https://github.com/open-spaced-repetition/fsrs4anki) and [Ye et al., KDD 2022](https://doi.org/10.1145/3534678.3539081).
+
+## Development and release checks
+
+```sh
+npm ci --ignore-scripts
+npm run lint
+npm test
+npm run test:package
+```
+
+The package check builds, packs to a temporary directory and verifies real CommonJS, ESM and TypeScript consumers against the packed artifact. It does not publish. npm publication requires a separate manual workflow dispatch with an exact manifest version; pushes do not bump or publish a version.
+
+For defects, provide a minimal reproduction through the [issue tracker](https://github.com/ammmcreativetech-dot/quanta-fsrs/issues). Commercial licensing contacts and conditions are in LICENSE.
